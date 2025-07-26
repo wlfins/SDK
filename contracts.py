@@ -15,6 +15,12 @@ class ContractClient:
             "ReverseRegistrar": "C:/DEV/WLFIns/artifacts/contracts/ReverseRegistrar.sol/ReverseRegistrar.json",
             "WLFIRegistryNFT": "C:/DEV/WLFIns/artifacts/contracts/WLFIRegistryNFT.sol/WLFIRegistryNFT.json",
         }
+        self.contract_addresses = {
+            "WLFIRegistryNFT": "0x9E4730D0Cf58666BB8E4c39a20F58ebc3784A2F8",
+            "PublicResolver": "0xA26ADBb653D0aA79e8b0cfF5B4637c3077856636",
+            "Registrar": "0x545e3DC0Bd807df1Fa72Be095354F43C7eB5CCe9",
+            "ReverseRegistrar": "0x4d9d06E47232848fffcd196D3Fb94244b20D1078",
+        }
 
     def _load_abi(self, contract_name: str):
         abi_path = self.abi_paths.get(contract_name)
@@ -23,42 +29,44 @@ class ContractClient:
         with open(abi_path, 'r') as f:
             return json.load(f)['abi']
 
-    def get_contract(self, contract_name: str, contract_address: str):
+    def get_contract(self, contract_name: str):
         if contract_name not in self.contracts:
+            contract_address = self.contract_addresses.get(contract_name)
+            if not contract_address:
+                raise ValueError(f"Address not found for contract: {contract_name}")
             abi = self._load_abi(contract_name)
             self.contracts[contract_name] = self.w3.eth.contract(address=contract_address, abi=abi)
         return self.contracts[contract_name]
 
-# Example Usage (assuming contract addresses are known or deployed)
+    def get_all_contracts(self):
+        return {
+            name: self.get_contract(name) for name in self.contract_addresses.keys()
+        }
+
+# Example Usage
 if __name__ == '__main__':
     try:
         client = ContractClient()
         print("Connected to Web3 provider:", client.w3.is_connected())
 
-        # Replace with actual deployed contract addresses
-        REGISTRAR_ADDRESS = "0x545e3DC0Bd807df1Fa72Be095354F43C7eB5CCe9"
-<<<<<<< HEAD
-        PUBLIC_RESOLVER_ADDRESS = "0xA26ADBb653D0aA79e8b0cfF5B4637c3077856636"
-        REVERSE_REGISTRAR_ADDRESS = "0x4d9d06E47232848fffcd196D3Fb94244b20D1078"
-        WLFI_REGISTRY_NFT_ADDRESS = "0x9E4730D0Cf58666BB8E4c39a20F58ebc3784A2F8"
+        # Get all contract instances
+        all_contracts = client.get_all_contracts()
 
-        # Get contract instances
-        registrar_contract = client.get_contract("Registrar", REGISTRAR_ADDRESS)
-        public_resolver_contract = client.get_contract("PublicResolver", PUBLIC_RESOLVER_ADDRESS)
-        reverse_registrar_contract = client.get_contract("ReverseRegistrar", REVERSE_REGISTRAR_ADDRESS)
-        wlfi_registry_nft_contract = client.get_contract("WLFIRegistryNFT", WLFI_REGISTRY_NFT_ADDRESS)
+        for name, contract in all_contracts.items():
+            print(f"\n--- {name} ({contract.address}) ---")
+            # Print the first 5 functions for brevity
+            print("Functions:", list(contract.functions)[:5])
 
-        print(f"Registrar contract functions: {dir(registrar_contract.functions)}")
-        print(f"PublicResolver contract functions: {dir(public_resolver_contract.functions)}")
-        print(f"ReverseRegistrar contract functions: {dir(reverse_registrar_contract.functions)}")
-        print(f"WLFIRegistryNFT contract functions: {dir(wlfi_registry_nft_contract.functions)}")
-
-        # Example: Call a view function (replace with actual function and parameters)
-        # try:
-        #     grace_period = registrar_contract.functions.gracePeriod().call()
-        #     print(f"Registrar grace period: {grace_period}")
-        # except Exception as e:
-        #     print(f"Error calling gracePeriod: {e}")
+        # Example: Call a view function from the Registrar
+        registrar = all_contracts.get("Registrar")
+        if registrar:
+            try:
+                # This is an example, replace with a valid function if needed
+                # grace_period = registrar.functions.gracePeriod().call()
+                # print(f"\nRegistrar grace period: {grace_period}")
+                pass
+            except Exception as e:
+                print(f"\nError calling view function on Registrar: {e}")
 
     except ConnectionError as e:
         print(f"Web3 connection error: {e}")
