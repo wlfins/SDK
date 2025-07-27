@@ -1,7 +1,7 @@
 import requests
 
 class WLFIApiClient:
-    def __init__(self, base_url="http://localhost:3001"):
+    def __init__(self, base_url="https://metadata.wlfins.domains/"):
         self.base_url = base_url
 
     def get_image(self, token_id: str):
